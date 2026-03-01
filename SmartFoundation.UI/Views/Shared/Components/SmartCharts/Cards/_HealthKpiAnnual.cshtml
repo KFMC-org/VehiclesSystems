@@ -1,0 +1,122 @@
+﻿@model SmartFoundation.UI.ViewModels.SmartCharts.ChartCardConfig
+@using SmartFoundation.UI.ViewModels.SmartCharts
+@using System.Text.Json
+@using System.Text.Encodings.Web
+
+@{
+    var hostId = $"healthkpiannual_{Model.Id}";
+    var cfgId = $"{hostId}_cfg";
+
+    //  مصدر البيانات الجديد: HealthKpiIndicators
+    var indicators = (Model.HealthKpiIndicators ?? new List<HealthKpiIndicator>())
+        .Where(x => !string.IsNullOrWhiteSpace(x.Key))
+        .Select(k => new
+        {
+            key = k.Key,
+            title = k.Title ?? "",
+            subtitle = k.Subtitle ?? "",
+            unit = k.Unit ?? "",
+            icon = k.Icon ?? "",
+            emoji = k.Emoji ?? "",
+            tone = (k.Tone ?? "info").ToLower(),
+            planGoal = k.PlanGoal, // nullable
+            hint = k.Hint ?? "",
+            href = k.Href ?? "",
+            years = (k.Years ?? new List<HealthKpiIndicatorYear>())
+                .OrderBy(y => y.Year)
+                .Select(y => new
+                {
+                    key = y.Key ?? "",
+                    year = y.Year,
+                    title = y.Title ?? "",
+                    subtitle = y.Subtitle ?? "",
+                    target = y.Target,   // nullable
+                    actual = y.Actual,   // nullable
+                    badge = y.Badge ?? "",
+                    tone = (y.Tone ?? "info").ToLower(),
+                    icon = y.Icon ?? "",
+                    emoji = y.Emoji ?? "",
+                    href = y.Href ?? ""
+                })
+        }).ToList();
+
+    var cfg = new
+    {
+        id = hostId,
+        dir = (Model.Dir ?? "rtl").ToLower(),
+        animate = Model.HealthKpiAnimate,
+        valueFormat = "0",
+        indicators = indicators
+    };
+
+    var json = JsonSerializer.Serialize(cfg, new JsonSerializerOptions
+    {
+        Encoder = JavaScriptEncoder.Default,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    });
+
+    //  عنوان/وصف البانل من نفس ChartCardConfig
+    var title = Model.Title ?? "مؤشر أداء المدن الصحية";
+    var subtitle = Model.Subtitle ?? "خطة مستهدفات الفعاليات والمشاركات الإجتماعية للمدن الصحية (2026 - 2028)";
+}
+
+<div class="hkpa-panel" dir="@Model.Dir">
+    <!--  Panel Header (لهذا الشارت فقط) -->
+    <div class="hkpa-panel__head">
+        <div class="hkpa-panel__title">
+            <span class="hkpa-panel__heart" aria-hidden="true">
+                <svg viewBox="0 0 64 64" width="22" height="22" aria-hidden="true" focusable="false">
+                    <!-- القلب -->
+                    <path class="hkpa-heart-shape"
+                          d="M32 56s-18-11.6-26-22C-2 24 4 8 18 8c6 0 10 3.6 14 8
+                 4-4.4 8-8 14-8 14 0 20 16 12 26-8 10.4-26 22-26 22z" />
+                    <!-- خط النبض -->
+                    <polyline class="hkpa-heart-pulse"
+                              points="12,34 20,34 24,26 30,42 36,30 40,34 52,34" />
+                </svg>
+            </span>
+            <span>@title</span>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(subtitle))
+        {
+            <div class="hkpa-panel__sub">@subtitle</div>
+        }
+    </div>
+
+    <!-- Chart Body -->
+    <div id="@hostId"
+         class="smart-healthkpiannual"
+         dir="@Model.Dir"
+         data-config-id="@cfgId"
+         data-top-tip="full">
+        <!-- data-top-tip="full"
+             إشارة للـ JS: Tooltip للمربعات العلوية لازم يعرض كل التفاصيل (سنوات/منجز/مستهدف/متبقي/عناوين) -->
+        <!-- Toolbar -->
+        <div class="hkpa-toolbar" aria-label="خيارات العرض">
+            <button type="button" class="hkpa-viewbtn is-on" data-view="matrix">عرض مختصر</button>
+            <button type="button" class="hkpa-viewbtn" data-view="detail">عرض مفصل</button>
+        </div>
+
+        <!-- Row 1: 7 indicators injected by JS -->
+        <div class="hkpa-top" aria-label="مؤشرات الأداء العامة">
+            <div class="hkpa-indicators"></div>
+        </div>
+
+        <!-- Compact Matrix -->
+        <div class="hkpa-matrix" aria-label="مصفوفة المؤشرات حسب السنوات"></div>
+
+        <!-- Detailed (مرة واحدة فقط) -->
+        <div class="hkpa-years" aria-label="الأداء السنوي حسب السنة"></div>
+
+        <!-- Tooltip portal -->
+        <div class="hkpa-tip" aria-hidden="true">
+            <div class="hkpa-tip__title"></div>
+            <div class="hkpa-tip__body"></div>
+        </div>
+    </div>
+
+    <script type="application/json" id="@cfgId">
+        @Html.Raw(json)
+    </script>
+</div>

@@ -1,0 +1,76 @@
+﻿/* =================================================
+   Toastr – Clean Override (RTL Friendly)
+   
+   ================================================= */
+
+/* الحاوية */
+#toast-container > .toast {
+    border-radius: 6px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.18);
+    opacity: 1;
+    font-family: inherit;
+}
+
+    /* RTL */
+    #toast-container > .toast.rtl {
+        direction: rtl;
+    }
+
+/* العنوان */
+.toast-title {
+    font-size: 14px;
+    font-weight: 800;
+    margin-bottom: 4px;
+    letter-spacing: -.2px;
+}
+
+/* الرسالة */
+.toast-message {
+    font-size: 13px;
+    line-height: 1.5;
+    opacity: .95;
+}
+
+/* زر الإغلاق */
+.toast-close-button {
+    font-size: 18px;
+    opacity: .6;
+    transition: opacity 120ms ease;
+}
+
+    .toast-close-button:hover {
+        opacity: .9;
+    }
+
+/* ===== الألوان ===== */
+
+/* Success */
+.toast.toast-success {
+    background-color: #093;
+}
+
+/* Error */
+.toast.toast-error {
+    background-color: #C0392B;
+}
+
+/* Info */
+.toast.toast-info {
+    background-color: #2980B9;
+}
+
+/* Warning */
+.toast.toast-warning {
+    background-color: #F39C12;
+}
+
+/* شريط التقدم */
+.toast-progress {
+    height: 3px;
+    opacity: .35;
+}
+
+/* Hover  */
+#toast-container > .toast:hover {
+    box-shadow: 0 12px 30px rgba(0,0,0,.25);
+}

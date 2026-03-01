@@ -1,0 +1,43 @@
+﻿@model SmartFoundation.UI.ViewModels.SmartPage.SmartPageViewModel
+@{
+    ViewData["Title"] = Model.PageTitle;
+    var mustChangePassword = Context.Session.GetString("ChangedPassword") == "0";
+}
+
+@if (mustChangePassword)
+{
+
+        <!-- Content -->
+    <div class="flex-1 p-6 border-4 border-red-600 rounded-lg mb-6" dir="rtl">
+            <div class="bg-white rounded-lg p-4 mb-4 shadow-sm">
+                <h3 class="text-sm font-semibold text-red-700 mb-2">
+                    🔒 لأسباب أمنيةلن تتمكن من استخدام النظام حتى تقوم بتغيير كلمة المرور .
+                </h3>
+            <ul class="space-y-2 text-sm text-red-600">
+                <li class="text-sm font-semibold text-red-700 mb-2">
+                        <i class="fa-solid fa-ban text-red-500"></i>
+                        جميع القوائم والصفحات محظورة
+                    </li>
+                <li class="text-sm font-semibold text-red-700 mb-2">
+                        <i class="fa-solid fa-lock text-red-500"></i>
+                        لا يمكن الوصول إلى أي بيانات
+                    </li>
+                <li class="text-sm font-semibold text-red-700 mb-2">
+                        <i class="fa-solid fa-key text-green-500"></i>
+                        قم بتغيير كلمة المرور الآن للمتابعة
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Action Buttons -->
+        </div>
+   
+
+    <!-- ✅ Animated bottom border -->
+}
+
+<!-- Rest of your Home page content -->
+
+@await Component.InvokeAsync("SmartRenderer", new { model = Model })
+
+

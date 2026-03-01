@@ -1,0 +1,651 @@
+﻿@using SmartFoundation.UI.ViewModels.SmartForm
+@using System.Text.Json
+@model SmartFoundation.UI.ViewModels.SmartForm.FormConfig
+
+@{
+    var formId = Model.FormId ?? "smartForm";
+    string? currentSection = null;
+    var sectionOpen = false;
+
+    var webJson = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+
+    // مهم: هذا لازم يبقى برا foreach عشان نقدر نسكره بعدين
+    var defaultRowOpen = false;
+
+    @functions {
+    public string GetSafeInputType(string? type)
+    {
+        var knownTypes = new HashSet<string> { "text", "tel", "email", "number", "password", "url", "search" };
+        var lower = type?.ToLowerInvariant() ?? "text";
+        return knownTypes.Contains(lower) ? lower : "text";
+    }
+}
+
+}
+
+<form id="@formId"
+      x-data="smartForm"
+      x-on:submit.prevent="submitForm('@Model.ActionUrl', '@Model.Method', $event)"
+      data-sp="@Model.StoredProcedureName"
+      data-operation="@Model.Operation"
+      autocomplete="off"
+      class="sf-form w-full">
+
+    @* Show LabelText if provided *@
+    @if (!string.IsNullOrWhiteSpace(Model.LabelText))
+    {
+        <div class="form-label-text mb-4 text-sm text-gray-700">@Model.LabelText</div>
+    }
+
+    @foreach (var hidden in Model.Fields.Where(f => f.IsHidden || f.Type.Equals("hidden", StringComparison.OrdinalIgnoreCase)))
+    {
+        <input type="hidden" name="@hidden.Name" value="@hidden.Value" />
+    }
+
+    @foreach (var field in Model.Fields.Where(f => !f.IsHidden && !f.Type.Equals("hidden", StringComparison.OrdinalIgnoreCase)))
+    {
+        if (!string.IsNullOrWhiteSpace(field.SectionTitle) && field.SectionTitle != currentSection)
+        {
+            // اقفل أي سكشن مفتوح
+            if (sectionOpen)
+            {
+                @:</div>
+                @:</fieldset>
+                sectionOpen = false;
+            }
+
+            
+            if (defaultRowOpen)
+            {
+                @:</div>
+                defaultRowOpen = false;
+            }
+
+            // افتح سكشن جديد باستخدام fieldset
+            currentSection = field.SectionTitle;
+            @:<fieldset class="section-box col-span-12 mb-2">
+                @:<legend class="section-legend">@currentSection</legend>
+                @:<div class="form-row grid grid-cols-12 gap-6 sm:gap-8">
+            sectionOpen = true;
+        }
+        else
+        {
+            
+            if (!sectionOpen && !defaultRowOpen)
+            {
+                @:<div class="form-row grid grid-cols-12 gap-6 sm:gap-8">
+                defaultRowOpen = true;
+            }
+        }
+
+        var colCss = field.GetResolvedColCss();
+
+        <div class="form-group @colCss">
+          @if (!field.Type.Equals("checkbox", StringComparison.OrdinalIgnoreCase)
+             && !field.Type.Equals("radio", StringComparison.OrdinalIgnoreCase))
+
+            {
+                <label for="@field.Name" class="text-md mb-1.5 block font-medium text-gray-900">
+                    @field.Label
+                    @if (field.Required) { <span class="text-red-500">*</span> }
+                </label>
+            }
+
+            @switch (field.Type.ToLower())
+            {
+                                            @* case "select":
+                                        {
+                                            var name = field.Name;
+                                            var value = field.Value ?? "";
+                                            var placeholder = field.Placeholder ?? "الرجاء الاختيار";
+
+                                            var required = field.Required ? "required" : "";
+                                            var disabled = field.Disabled ? "disabled" : "";
+
+                                            var useSelect2 = field.Select2;
+                                            var minResults = field.Select2MinResultsForSearch;
+                                            var s2Placeholder = string.IsNullOrWhiteSpace(field.Select2Placeholder)
+                                                ? placeholder
+                                                : field.Select2Placeholder;
+
+                                            var onchangeJs =
+                                                string.IsNullOrWhiteSpace(field.DependsOn) &&
+                                                string.IsNullOrWhiteSpace(field.DependsUrl)
+                                                    ? field.OnChangeJs
+                                                    : null;
+
+                                            <div class="sf-select-wrap">
+                                                <select
+                                                    id="@name"
+                                                    name="@name"
+                                                    class="sf-modal-input sf-modal-select @(useSelect2 ? "js-select2" : "") @field.ExtraCss"
+                                                    @required
+                                                    @disabled
+                                                    data-depends-on="@field.DependsOn"
+                                                    data-depends-url="@field.DependsUrl"
+                                                    data-s2-min-results="@(minResults?.ToString())"
+                                                    data-s2-placeholder="@s2Placeholder"
+                                                    onchange="@onchangeJs">
+
+                                                    <option value="" disabled @(string.IsNullOrWhiteSpace(value) ? "selected" : "")>
+                                                        @placeholder
+                                                    </option>
+
+                                                    @foreach (var opt in field.Options)
+                                                    {
+                                                        var optValue = opt.Value ?? "";
+                                                        var optText = opt.Text ?? "";
+                                                        var isSelected =
+                                                            opt.Selected ||
+                                                            string.Equals(value, optValue, StringComparison.OrdinalIgnoreCase);
+
+                                                        <option value="@optValue"
+                                                                @(opt.Disabled ? "disabled" : null)
+                                                                @(isSelected ? "selected" : null)>
+                                                            @optText
+                                                        </option>
+                                                    }
+                                                </select>
+                                            </div>
+
+                                            @if (!string.IsNullOrWhiteSpace(field.HelpText))
+                                            {
+                                                <p class="mt-1 text-xs text-gray-500">@field.HelpText</p>
+                                            }
+                                        }
+                                        break; *@
+
+                                        case "select":
+                                            {
+                                                var name = field.Name;
+                                                var value = field.Value ?? "";
+                                                var placeholder = field.Placeholder ?? "الرجاء الاختيار";
+
+                                                var required = field.Required ? "required" : "";
+                                                var disabled = field.Disabled ? "disabled" : "";
+
+                                                var useSelect2 = field.Select2;
+                                                var minResults = field.Select2MinResultsForSearch;
+                                                var s2Placeholder = string.IsNullOrWhiteSpace(field.Select2Placeholder)
+                                                    ? placeholder
+                                                    : field.Select2Placeholder;
+
+                                                var onchangeJs =
+                                                    string.IsNullOrWhiteSpace(field.DependsOn) &&
+                                                    string.IsNullOrWhiteSpace(field.DependsUrl)
+                                                        ? field.OnChangeJs
+                                                        : null;
+
+                                                <div class="sf-select-wrap">
+                                                    <select
+                                                        id="@name"
+                                                        name="@name"
+                                                        class="sf-modal-input sf-modal-select @(useSelect2 ? "js-select2" : "") @field.ExtraCss"
+                                                        @required
+                                                        @disabled
+                                                        data-depends-on="@field.DependsOn"
+                                                        data-depends-url="@field.DependsUrl"
+                                                        data-s2-min-results="@(minResults?.ToString())"
+                                                        data-s2-placeholder="@s2Placeholder"
+
+                                                        data-sf-url="@field.NavUrl"
+                                                        data-sf-key="@field.NavKey"
+                                                        data-sf-key2="@field.NavKey2" data-sf-val2="@field.NavVal2"
+                                                        data-sf-key3="@field.NavKey3" data-sf-val3="@field.NavVal3"
+                                                        data-sf-key4="@field.NavKey4" data-sf-val4="@field.NavVal4"
+                                                        data-sf-key5="@field.NavKey5" data-sf-val5="@field.NavVal5"
+                                                        data-sf-field3="@field.NavField3"
+                                                        data-sf-field4="@field.NavField4"
+                                                        data-sf-field5="@field.NavField5"
+                                                        data-sf-toggle-group="@field.ToggleGroup"
+                                                        data-sf-toggle-map="@field.ToggleMap"
+                                                        data-sf-toggle-mode="@field.ToggleMode"
+
+
+                                                        data-sf-required="@(field.Required ? "1" : "0")"
+                                                        data-sf-required-msg="@field.RequiredMsg"
+                                                        data-sf-reject="@field.RejectValue"
+                                                        data-sf-reject-msg="@field.RejectMsg"
+                                                        data-sf-toast-type="@field.ToastType"
+                                                        data-sf-pattern="@field.InputPattern"
+                                                        data-sf-pattern-msg="@field.PatternMsg"
+
+                                                        onchange="@onchangeJs">
+
+                                                        <option value="" disabled @(string.IsNullOrWhiteSpace(value) ? "selected" : "")>
+                                                            @placeholder
+                                                        </option>
+
+                                                        @foreach (var opt in field.Options)
+                                                        {
+                                                            var optValue = opt.Value ?? "";
+                                                            var optText = opt.Text ?? "";
+                                                            var isSelected =
+                                                                opt.Selected ||
+                                                                string.Equals(value, optValue, StringComparison.OrdinalIgnoreCase);
+
+                                                            <option value="@optValue"
+                                                                    @(opt.Disabled ? "disabled" : null)
+                                                                    @(isSelected ? "selected" : null)>
+                                                                @optText
+                                                            </option>
+                                                        }
+                                                    </select>
+                                                </div>
+
+                                                @if (!string.IsNullOrWhiteSpace(field.HelpText))
+                                                {
+                                                    <p class="mt-1 text-xs text-gray-500">@field.HelpText</p>
+                                                }
+                                            }
+                                            break;
+
+
+
+
+                                case "checkbox":
+                                    <div class="form-group @field.GetResolvedColCss()">
+                                        <div class="flex items-start gap-2">
+                                            <input type="hidden" name="@field.Name" value="false" />
+                                            <input type="checkbox" id="@field.Name" name="@field.Name" value="true"
+                                                   class="sf-checkbox @field.ExtraCss"
+                                                   @(field.Value == "true" ? "checked" : null)
+                                                   x-on:change="@field.OnChangeJs" />
+                                            <label for="@field.Name"
+                                                   class="text-md cursor-pointer leading-relaxed break-words whitespace-normal text-gray-700 select-none">
+                                                @field.Label @if (field.Required) { <span class="text-red-500">*</span> }
+                                            </label>
+                                        </div>
+                                    </div>
+                                    break;
+
+                            case "radio":
+                                <div class="form-group @field.GetResolvedColCss()">
+                                    <div class="mt-1 grid gap-2">
+                                        <span class="sf-label">@field.Label @if (field.Required) { <span class="text-red-500">*</span> }</span>
+                                        @foreach (var opt in field.Options)
+                                        {
+                                            var radioId = $"{field.Name}_{opt.Value}";
+                                            <label for="@radioId" class="text-md flex items-center gap-2 text-gray-700">
+                                                <input type="radio" id="@radioId" name="@field.Name" value="@opt.Value"
+                                                       class="sf-radio"
+                                                       @(opt.Selected ? "checked" : null)
+                                                       @(opt.Disabled ? "disabled" : null)
+                                                       x-on:change="@field.OnChangeJs" />
+                                                <span>@opt.Text</span>
+                                            </label>
+                                        }
+                                    </div>
+                                </div>
+                                break;
+
+                            case "file":
+                                <div class="form-group @field.GetResolvedColCss()">
+                                    <input type="file" id="@field.Name" name="@field.Name"
+                                           class="sf-file @field.ExtraCss"
+                                           @(field.Multiple ? "multiple" : null)
+                                           @(field.Required ? "required" : null)
+                                           x-on:change="@field.OnChangeJs" />
+                                </div>
+                                break;
+
+
+
+
+
+                              case "date":
+                                {
+                                    var inputId = field.Name;
+                                    var placeholder = field.Placeholder ?? "YYYY-MM-DD";
+
+                                    var inputCss = $"input w-full text-md text-right {(string.IsNullOrWhiteSpace(field.Icon) ? "" : "pl-10")} {field.ExtraCss}";
+
+
+                                    <div class="relative">
+                                        @if (!string.IsNullOrWhiteSpace(field.Icon))
+                                        {
+                                            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                    <i class="@field.Icon text-md text-gray-400"></i>
+                                </div>
+
+                                        }
+
+                                        <input type="text"
+                                               id="@inputId"
+                                               name="@field.Name"
+                                               value="@field.Value"
+                                               placeholder="@placeholder"
+                                               class="@inputCss"
+                                               dir="ltr"
+                                               autocomplete="off"
+                                               x-init="flatpickr($el, { dateFormat: 'Y-m-d', locale: 'ar' })"
+                                               x-on:change="@field.OnChangeJs"
+                                               @(field.Required ? "required" : null)
+                                               @(field.Disabled ? "disabled" : null)
+                                               @(field.Readonly ? "readonly" : null) />
+                                    </div>
+                                }
+                                break;
+
+
+
+              
+
+                default:
+                <div class="form-group @field.GetResolvedColCss() relative">
+                    
+                    @if (!string.IsNullOrWhiteSpace(field.Icon) && !field.InlineButton)
+
+                    {
+                        @* <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"> *@
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                            <i class="@field.Icon text-md text-gray-400"></i>
+                        </div>
+                    }
+
+                    @if (field.Type.ToLower() == "textarea")
+                    {
+                        <textarea id="@field.Name"
+                      name="@field.Name"
+                      rows="4"
+                      placeholder="@field.Placeholder"
+                      value="@field.Value"
+                      autocomplete="@(field.Autocomplete ?? "off")"
+                      spellcheck="@(field.Spellcheck?.ToString().ToLower() ?? "false")"
+                      autocapitalize="@(field.Autocapitalize ?? "none")"
+                      autocorrect="@(field.Autocorrect ?? "off")"
+                      @(field.Min.HasValue ? $"min=\"{field.Min}\"" : null)
+                      @(field.Max.HasValue ? $"max=\"{field.Max}\"" : null)
+                      @(field.MaxLength.HasValue ? $"maxlength=\"{field.MaxLength}\"" : null)
+                      x-input-lang="@field.InputLang"
+                      x-input-pattern="@field.InputPattern"
+                      x-on:change="@field.OnChangeJs"
+                      @* @Html.Raw(field.SubmitOnEnter ? " x-on:keydown.enter.prevent=\"sfEnter(this)\"" : "") *@
+                      @Html.Raw(field.SubmitOnEnter ? " x-on:keydown.enter.prevent=\"window.sfEnter($event.target)\"" : "")
+                      data-dependson="@field.DependsOn"
+                      data-dependsurl="@field.DependsUrl"
+                      data-textmode="@field.TextMode"
+                      dir="@(field.IsNumericOnly ? "ltr" : "rtl")"
+                      class="sf-textarea text-md text-right @field.ExtraCss @(string.IsNullOrWhiteSpace(field.Icon) ? "" : "pl-10")"
+                      @(field.Required ? "required" : null)
+                      @(field.Disabled ? "disabled" : null)
+                      @(field.Readonly ? "readonly" : null)
+                      aria-required="@(field.Required.ToString().ToLower())"
+                      aria-invalid="false"
+                      aria-describedby="@($"{field.Name}_error {field.Name}_help")"
+                      oninput="@(
+                          field.TextMode switch {
+                              "arabic"      => $"this.value=this.value.replace(/[^\\u0600-\\u06FF]/g,'').slice(0,{field.MaxLength ?? 200});",
+                              "arsentence"  => $"this.value=this.value.replace(/[^\\u0600-\\u06FF\\s،.]/g,'').slice(0,{field.MaxLength ?? 200});",
+                              "english"     => $"this.value=this.value.replace(/[^A-Za-z]/g,'').slice(0,{field.MaxLength ?? 200});",
+                              "engsentence" => $"this.value=this.value.replace(/[^A-Za-z\\s.,]/g,'').slice(0,{field.MaxLength ?? 200});",
+                              "email"       => $"this.value=this.value.replace(/[^A-Za-z0-9@._-]/g,'').slice(0,{field.MaxLength ?? 100});",
+                              "url"         => $"this.value=this.value.replace(/[^A-Za-z0-9:/?&=._-]/g,'').slice(0,{field.MaxLength ?? 200});",
+                              _ when field.IsNumericOnly => $"this.value=this.value.replace(/\\D/g,'').slice(0,{field.MaxLength ?? 200});",
+                              _ when field.MaxLength.HasValue => $"this.value=this.value.slice(0,{field.MaxLength});",
+                              _ => null
+                          })">@field.Value</textarea>
+        }
+        else
+        {
+
+                    <div class="flex items-center gap-2">
+                        @* زر قبل الحقل (start) *@
+                        @if (field.InlineButton && (field.InlineButtonPosition ?? "end").ToLower() == "start")
+                        {
+                            @* <button type="button"
+                                    class="shrink-0 whitespace-nowrap @(string.IsNullOrWhiteSpace(field.InlineButtonCss) ? "btn btn-success" : field.InlineButtonCss)"
+                                    @Html.Raw(string.IsNullOrWhiteSpace(field.InlineButtonOnClickJs) ? "" : $"onclick=\"{field.InlineButtonOnClickJs}\"")>
+                                @if (!string.IsNullOrWhiteSpace(field.InlineButtonIcon))
+                                {
+                                    <i class="@field.InlineButtonIcon text-[14px]"></i>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(field.InlineButtonText))
+                                {
+                                    <span>@field.InlineButtonText</span>
+                                }
+                            </button> *@
+                            <button type="button"
+                                    class="shrink-0 whitespace-nowrap @(string.IsNullOrWhiteSpace(field.InlineButtonCss) ? "btn btn-success" : field.InlineButtonCss)"
+                                    @Html.Raw(string.IsNullOrWhiteSpace(field.InlineButtonOnClickJs) ? "" : $"onclick=\"{field.InlineButtonOnClickJs}\"")
+                                    data-sf-field="@field.Name"
+                                    data-sf-url="@field.NavUrl"
+                                    data-sf-key="@field.NavKey"
+                                    data-sf-key2="@field.NavKey2" data-sf-val2="@field.NavVal2"
+                                    data-sf-key3="@field.NavKey3" data-sf-val3="@field.NavVal3"
+                                    data-sf-key4="@field.NavKey4" data-sf-val4="@field.NavVal4"
+                                    data-sf-key5="@field.NavKey5" data-sf-val5="@field.NavVal5"
+                                    data-sf-field3="@field.NavField3"
+                                    data-sf-field4="@field.NavField4"
+                                    data-sf-field5="@field.NavField5"
+                                    data-sf-toggle-group="@field.ToggleGroup"
+                                    data-sf-toggle-map="@field.ToggleMap"
+                                    data-sf-toggle-mode="@field.ToggleMode"
+                                    data-sf-required="@(field.Required ? "1" : "0")"
+                                    data-sf-required-msg="@field.RequiredMsg"
+                                    data-sf-pattern="@field.InputPattern"
+                                    data-sf-pattern-msg="@field.PatternMsg"
+                                    data-sf-reject="@field.RejectValue"
+                                    data-sf-reject-msg="@field.RejectMsg"
+                                    data-sf-toast-type="@field.ToastType">
+                                @if (!string.IsNullOrWhiteSpace(field.InlineButtonIcon))
+                                {
+                                    <i class="@field.InlineButtonIcon text-[14px]"></i>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(field.InlineButtonText))
+                                {
+                                    <span>@field.InlineButtonText</span>
+                                }
+                            </button>
+
+                        }
+
+                    <div class="relative min-w-0 flex-1">
+                    @if (!string.IsNullOrWhiteSpace(field.Icon))
+                    {
+                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                            <i class="@field.Icon text-md text-gray-400"></i>
+                        </div>
+                    }
+
+                    <input type="@(GetSafeInputType(field.Type))"
+                           id="@field.Name"
+                           name="@field.Name"
+                           value="@field.Value"
+                           placeholder="@(field.Placeholder ?? (field.Type.ToLower() == "phone" ? "05xxxxxxxx" : field.IsIban ? "SAxxxxxxxxxxxxxxxxxxxx" : ""))"
+                           @(field.Min.HasValue ? $"min=\"{field.Min}\"" : null)
+                           @(field.Max.HasValue ? $"max=\"{field.Max}\"" : null)
+                           @(field.MaxLength.HasValue ? $"maxlength=\"{field.MaxLength}\"" : null)
+                           pattern="@(field.Type.ToLower() == "phone" ? @"^05\d{8}$" : field.IsIban ? @"^SA[0-9]{2}[0-9]{2,20}$" : field.IsNumericOnly ? @"^\d{10}$" : field.Pattern)"
+                           x-input-lang="@field.InputLang"
+                           x-input-pattern="@field.InputPattern"
+                           x-on:change="@field.OnChangeJs"
+                           @* @Html.Raw(field.SubmitOnEnter ? " x-on:keydown.enter.prevent=\"sfEnter(this)\"" : "") *@
+                           @Html.Raw(field.SubmitOnEnter ? " x-on:keydown.enter.prevent=\"window.sfEnter($event.target)\"" : "")
+                           autocomplete="@(field.Autocomplete ?? "off")"
+                           spellcheck="@(field.Spellcheck?.ToString().ToLower() ?? "false")"
+                           autocapitalize="@(field.Autocapitalize ?? "none")"
+                           autocorrect="@(field.Autocorrect ?? "off")"
+                           data-dependson="@field.DependsOn"
+                           data-dependsurl="@field.DependsUrl"
+                           data-textmode="@field.TextMode"
+                           dir="@(field.IsNumericOnly || field.IsIban || field.Type.ToLower() == "phone" ? "ltr" : "rtl")"
+                           oninput="@(
+                               field.Name == "Age"
+                               ? "if(this.value !== '' && parseInt(this.value) < 1) this.value = 1;"
+                               : field.Type.ToLower() switch {
+                                   "phone" => $"this.value=this.value.replace(/\\D/g,'');if(!this.value.startsWith('05'))this.value='05'+this.value.replace(/^05?/,'');this.value=this.value.slice(0,{field.MaxLength ?? 10});",
+                                   "iban"  => $"this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'');if(!this.value.startsWith('SA'))this.value='SA'+this.value.replace(/^SA?/,'');this.value=this.value.slice(0,{field.MaxLength ?? 34});",
+                                   _ when field.TextMode=="arabic"      => $"this.value=this.value.replace(/[^\\u0600-\\u06FF]/g,'').slice(0,{field.MaxLength ?? 200});",
+                                   _ when field.TextMode=="arsentence"  => $"this.value=this.value.replace(/[^\\u0600-\\u06FF\\s،.]/g,'').slice(0,{field.MaxLength ?? 200});",
+                                   _ when field.TextMode=="english"     => $"this.value=this.value.replace(/[^A-Za-z]/g,'').slice(0,{field.MaxLength ?? 200});",
+                                   _ when field.TextMode=="engsentence" => $"this.value=this.value.replace(/[^A-Za-z\\s.,]/g,'').slice(0,{field.MaxLength ?? 200});",
+                                   _ when field.TextMode=="email"       => $"this.value=this.value.replace(/[^A-Za-z0-9@._-]/g,'').slice(0,{field.MaxLength ?? 100});",
+                                   _ when field.TextMode=="url"         => $"this.value=this.value.replace(/[^A-Za-z0-9:/?&=._-]/g,'').slice(0,{field.MaxLength ?? 200});",
+                                   _ when field.IsNumericOnly           => $"this.value=this.value.replace(/\\D/g,'').slice(0,{field.MaxLength ?? 10});",
+                                   _ when field.MaxLength.HasValue      => $"this.value=this.value.slice(0,{field.MaxLength});",
+                                   _ => null
+                               })"
+                           onkeydown="@(field.IsNumericOnly || field.Type.ToLower()=="phone" ? "return (event.ctrlKey||event.metaKey||event.key.length>1)||/[0-9]/.test(event.key)" : null)"
+                           class="input w-full text-md text-right @field.ExtraCss @(string.IsNullOrWhiteSpace(field.Icon) ? "" : "pl-10") @(field.IsIban ? "uppercase tracking-wider font-mono" : "")"
+                           @(field.Required ? "required" : null)
+                           @(field.Disabled ? "disabled" : null)
+                           @(field.Readonly ? "readonly" : null)
+                           aria-required="@(field.Required.ToString().ToLower())"
+                           aria-invalid="false"
+                           aria-describedby="@($"{field.Name}_error {field.Name}_help")" />
+                </div>
+
+
+                            @* زر بعد الحقل (end) *@
+                            @if (field.InlineButton && (field.InlineButtonPosition ?? "end").ToLower() != "start")
+                            {
+                                @* <button type="button"
+                                        class="shrink-0 whitespace-nowrap @(string.IsNullOrWhiteSpace(field.InlineButtonCss) ? "btn btn-success" : field.InlineButtonCss)"
+                                        @Html.Raw(string.IsNullOrWhiteSpace(field.InlineButtonOnClickJs) ? "" : $"onclick=\"{field.InlineButtonOnClickJs}\"")>
+                                    @if (!string.IsNullOrWhiteSpace(field.InlineButtonIcon))
+                                    {
+                                        <i class="@field.InlineButtonIcon text-[14px]"></i>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(field.InlineButtonText))
+                                    {
+                                        <span>@field.InlineButtonText</span>
+                                    }
+                                </button> *@
+                                <button type="button"
+                                    class="shrink-0 whitespace-nowrap @(string.IsNullOrWhiteSpace(field.InlineButtonCss) ? "btn btn-success" : field.InlineButtonCss)"
+                                    @Html.Raw(string.IsNullOrWhiteSpace(field.InlineButtonOnClickJs) ? "" : $"onclick=\"{field.InlineButtonOnClickJs}\"")
+                                    data-sf-field="@field.Name"
+                                    data-sf-url="@field.NavUrl"
+                                    data-sf-key="@field.NavKey"
+                                    data-sf-key2="@field.NavKey2" data-sf-val2="@field.NavVal2"
+                                    data-sf-key3="@field.NavKey3" data-sf-val3="@field.NavVal3"
+                                    data-sf-key4="@field.NavKey4" data-sf-val4="@field.NavVal4"
+                                    data-sf-key5="@field.NavKey5" data-sf-val5="@field.NavVal5"
+                                    data-sf-field3="@field.NavField3"
+                                    data-sf-field4="@field.NavField4"
+                                    data-sf-field5="@field.NavField5"
+                                    data-sf-toggle-group="@field.ToggleGroup"
+                                    data-sf-toggle-map="@field.ToggleMap"
+                                    data-sf-toggle-mode="@field.ToggleMode"
+                                    data-sf-required="@(field.Required ? "1" : "0")"
+                                    data-sf-required-msg="@field.RequiredMsg"
+                                    data-sf-pattern="@field.InputPattern"
+                                    data-sf-pattern-msg="@field.PatternMsg"
+                                    data-sf-reject="@field.RejectValue"
+                                    data-sf-reject-msg="@field.RejectMsg"
+                                    data-sf-toast-type="@field.ToastType">
+                                @if (!string.IsNullOrWhiteSpace(field.InlineButtonIcon))
+                                {
+                                    <i class="@field.InlineButtonIcon text-[14px]"></i>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(field.InlineButtonText))
+                                {
+                                    <span>@field.InlineButtonText</span>
+                                }
+                            </button>
+
+                            }
+
+                        </div>
+                   }
+
+                        <span id="@($"{field.Name}_error")" asp-validation-for="@field.Name" class="form-error"></span>
+                    </div>
+                    break;
+
+            }
+
+            @if (!string.IsNullOrWhiteSpace(field.HelpText))
+            {
+                <p class="mt-1 text-xs text-gray-500">@field.HelpText</p>
+            }
+        </div>
+    } @* <-- نهاية foreach الحقول (مهم) *@
+
+    @* اقفل آخر grid مفتوح قبل الأزرار *@
+    @if (defaultRowOpen)
+    {
+        @:</div>
+        defaultRowOpen = false;
+    }
+
+    @if (sectionOpen)
+    {
+        @:</div>
+        @:</fieldset>
+        sectionOpen = false;
+    }
+
+    @{
+        // var hasSubmit = !string.IsNullOrWhiteSpace(Model.SubmitText);
+            var hasSubmit = Model.ShowSubmit && !string.IsNullOrWhiteSpace(Model.SubmitText);
+
+        var hasReset = Model.ShowReset && !string.IsNullOrWhiteSpace(Model.ResetText);
+        var hasCustom = Model.Buttons?.Any(b => b.Show) == true;
+
+        var hasActionsBar = hasSubmit || hasReset || hasCustom;
+    }
+
+    @if (hasActionsBar)
+    {
+        <div class="actions-bar col-span-12 mt-5 mb-6 px-4 pt-4">
+            <div class="actions-inner flex flex-wrap items-center justify-end gap-3">
+
+                @* @if (!string.IsNullOrWhiteSpace(Model.SubmitText)) *@
+                @if (Model.ShowSubmit && !string.IsNullOrWhiteSpace(Model.SubmitText))
+
+                {
+                    @* <button type="submit"
+                            class="btn btn-success border border-emerald-600 focus:ring-offset-2"> *@
+                            <button type="submit"
+        class="btn btn-success sf-modal-btn-save border border-emerald-600 focus:ring-offset-2">
+
+                        <i class="fa fa-save text-[14px]"></i>
+                        <span>@Model.SubmitText</span>
+                    </button>
+                }
+
+                @if (Model.ShowReset && !string.IsNullOrWhiteSpace(Model.ResetText))
+                {
+                    <button type="reset"
+        class="btn btn-secondary sf-modal-btn-cancel focus:ring-offset-2">
+
+                        <i class="fa fa-eraser text-[14px]"></i>
+                        <span>@Model.ResetText</span>
+                    </button>
+                }
+
+                @if (Model.Buttons?.Any(b => b.Show) == true)
+                {
+                    @foreach (var b in Model.Buttons.Where(b => b.Show))
+                    {
+                        var btnType = string.IsNullOrWhiteSpace(b.Type) ? "button" : b.Type;
+                        var iconHtml = string.IsNullOrWhiteSpace(b.Icon) ? "" : $"<i class=\"{b.Icon} text-[14px]\"></i>";
+
+                        var variant = (b.Color ?? "").Trim().ToLowerInvariant() switch
+                        {
+                            "success" => "btn-success",
+                            "info" => "btn-info",
+                            "danger" => "btn-danger",
+                            "warning" => "btn-warning",
+                            "secondary" => "btn-secondary",
+                            _ => "btn"
+                        };
+
+                        <button type="@btnType"
+                                class="btn @variant @(b.CssClass)"
+                                x-on:click="@(b.OnClickJs ?? "")"
+                                data-op="@b.Operation"
+                                data-sp="@b.StoredProcedureName">
+                            @Html.Raw(iconHtml)
+                            <span>@b.Text</span>
+                        </button>
+                    }
+                }
+
+            </div>
+        </div>
+    }
+
+</form>

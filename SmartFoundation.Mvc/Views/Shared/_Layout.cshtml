@@ -1,0 +1,372 @@
+﻿@using System.Text.Json
+@using SmartFoundation.Mvc.Models
+@using SmartFoundation.Mvc.Helpers
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] - النظام الموحد</title>
+
+    <!-- =========================
+         CSS (Global)
+    ========================== -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/datepicker.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/lib/toastr/css/toastr.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/lib/toastr/css/toastr.override.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/vendor/flatpickr/flatpickr.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/lib/select2/css/select2.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/SidebarNavbar.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/ai-assistant.css" asp-append-version="true" />
+
+
+    <!-- =========================
+         CSS (Charts)
+    ========================== -->
+    <link rel="stylesheet" href="~/css/smartcharts.donut.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/smartcharts.line.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/smartcharts.kpi.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/smartcharts.barh.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/smartcharts.funnel.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/smartcharts.gauge.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/smartcharts.occupancy.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/smartcharts.columnpro.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/smartcharts.rings.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/smartcharts.bullet.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/smartcharts.treemap.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/smartcharts.statusstack.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/smartcharts.waterfall.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/smartcharts.statsgrid.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/smartcharts.pie3d.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/smartcharts.opsboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/smartcharts.execwatch.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/smartcharts.healthkpiroadmap.css" asp-append-version="true" />
+
+
+    <!-- =========================
+         FontAwesome
+    ========================== -->
+    <link rel="stylesheet" type="text/css" href="/css/Fontawesome6-5-0.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/lib/fontawesome/css/all.min.css" asp-append-version="true" />
+
+    <style>
+        [x-cloak] {
+            display: none !important;
+        }
+
+        /* Unify borders in dark mode */
+        html.dark .border-gray-200 {
+            border-color: #1f2937 !important;
+        }
+
+        /* Prevent background flash when switching themes */
+        body {
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        /* Highlight today's date in datepicker (when not selected) - Light blue with border */
+        .datepicker-cell.bg-blue-100 {
+            background-color: #dbeafe !important;
+            color: #1e3a8a !important;
+            font-weight: 600 !important;
+            border: 2px solid #3b82f6 !important;
+            border-radius: 0.375rem !important;
+        }
+
+            .datepicker-cell.bg-blue-100:hover {
+                background-color: #bfdbfe !important;
+            }
+
+        /* Dark mode support for today (not selected) */
+        html.dark .datepicker-cell.bg-blue-900 {
+            background-color: #1e3a8a !important;
+            color: #dbeafe !important;
+            border: 2px solid #60a5fa !important;
+        }
+
+            html.dark .datepicker-cell.bg-blue-900:hover {
+                background-color: #1e40af !important;
+            }
+
+        /* Selected date keeps the solid blue background */
+        .datepicker-cell.selected {
+            background-color: #2563eb !important;
+            color: white !important;
+            font-weight: bold !important;
+        }
+
+            .datepicker-cell.selected:hover {
+                background-color: #1d4ed8 !important;
+            }
+
+        /* Force today styling with more specificity */
+        .datepicker-picker .datepicker-grid .datepicker-cell.today {
+            background-color: #3b82f6 !important;
+            color: white !important;
+        }
+
+        /* ================= Footer Upgrade (fixed + corrected) ================= */
+
+        :root {
+            --footer-h: 50px;
+            --sidebar-w: 260px;
+        }
+
+        footer.mt-auto {
+            background: ##fcfcfc !important;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 30;
+            border-top: 1px solid ##fcfcfc !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* عند وجود السايدبار*/
+        body.sidebar-pinned footer.mt-auto {
+            right: var(--sidebar-w);
+            width: calc(100% - var(--sidebar-w));
+        }
+
+        /* الألوان */
+        footer.mt-auto .text-center {
+            color: #636664 !important;
+            text-align: center !important;
+        }
+
+        footer.mt-auto .font-medium {
+            color: #708090 !important;
+            font-weight: 700 !important;
+        }
+
+        footer.mt-auto .text-gray-500,
+        footer.mt-auto .text-gray-400 {
+            color: #708090 !important;
+        }
+
+        @@media (max-width: 1366px) {
+            html {
+                font-size: 14px;
+            }
+
+            .container-fluid {
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+
+            table th, table td {
+                padding: 8px 4px !important;
+                font-size: 12px !important;
+            }
+        }
+
+        .overflow-x-auto {
+            scrollbar-width: thin;
+        }
+    </style>
+
+    <script>
+        // Apply dark theme before render to prevent flash
+        if (localStorage.getItem('color-theme') === 'dark' ||
+           (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+</head>
+
+<body class="sidebar-pinned bg-gray-50 text-gray-900 transition-colors duration-300 dark:bg-gray-900 dark:text-gray-100">
+    <input type="hidden" id="sf-ai-userid" value="@Context.Session.GetString("usersID")" />
+
+    <!-- Navbar + Sidebar -->
+    @await Component.InvokeAsync("MenuItems")
+
+    <!-- Main content area -->
+    <div id="main-content"
+         class="relative flex flex-col bg-gray-50 transition-all duration-300"
+         style="min-height: calc(100vh - var(--footer-h)); padding-bottom: calc(var(--footer-h) + 40px);">
+
+        <div id="main-loading">
+            <div class="loader-inner text-center">
+                <div class="gov-spinner mx-auto mb-4"></div>
+                <p class="text-lg font-medium tracking-wider text-gray-600">
+                    جاري التحميل...
+                </p>
+            </div>
+        </div>
+
+        <main class="w-full max-w-full flex-1 overflow-x-hidden px-2 pt-4 sm:px-4 md:px-6">
+            <div class="container-fluid mx-auto">
+                @RenderBody()
+            </div>
+        </main>
+
+        <footer class="mt-auto border-t bg-gray-200" style="border-color:#e5e7eb; height: var(--footer-h);">
+            <div class="grid h-full place-items-center px-4">
+                <div class="text-center text-sm text-gray-400" dir="rtl">
+                    <span class="font-medium text-gray-700">إدارة مدينة الملك فيصل العسكرية</span>
+                    <span class="mx-1 text-gray-400">©</span>
+                    <span class="text-gray-500">@DateTime.UtcNow.Year</span>
+                </div>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- =========================
+         Scripts (Global)
+         - ترتيب الاعتماد: jQuery -> Plugins -> App scripts
+    ========================== -->
+    <!-- 1) jQuery -->
+    <script src="~/lib/jquery/jquery-3.7.1.min.js" asp-append-version="true"></script>
+
+    <!-- 2) select2 -->
+    <script src="~/lib/select2/js/select2.min.js" asp-append-version="true"></script>
+    <script src="~/lib/select2/js/i18n/ar.js" asp-append-version="true"></script>
+
+    <!-- 3) toastr jQuery -->
+    <script src="~/lib/toastr/js/toastr.min.js" asp-append-version="true"></script>
+    <script>
+        toastr.options.positionClass = "toast-top-center";
+    </script>
+
+    <!-- 4) السكربتات -->
+    <script src="~/js/flowbite.min.js" asp-append-version="true" defer></script>
+    <script src="~/js/datepicker.min.js" asp-append-version="true"></script>
+    <script src="~/js/moment.min.js" asp-append-version="true"></script>
+    <script src="~/js/moment-hijri.min.js" asp-append-version="true"></script>
+    <script src="~/js/sf-select.js" asp-append-version="true"></script>
+    <script src="~/js/sf-date.js" asp-append-version="true" defer></script>
+    <script src="~/js/alpinejs.min.js" asp-append-version="true" defer></script>
+    <script src="~/js/sf-form.js" asp-append-version="true"></script>
+
+    <!-- 5) sf-table آخر شيء لأنه يعتمد على jQuery/select2 -->
+    <script src="~/js/sf-table.js" asp-append-version="true"></script>
+
+    <script src="/lib/xlsx/xlsx.full.min.js"></script>
+
+    <script>
+        toastr.options.positionClass = "toast-top-center";
+    </script>
+
+    <partial name="_Toastr" />
+
+    <!-- Other scripts -->
+    <script src="~/js/sf-dual-date.js" asp-append-version="true"></script>
+    <script src="~/js/form-helpers.js" asp-append-version="true"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const btn = document.getElementById('theme-toggle');
+            const darkIcon = document.getElementById('theme-toggle-dark-icon');
+            const lightIcon = document.getElementById('theme-toggle-light-icon');
+
+            if (!btn || !darkIcon || !lightIcon) return;
+
+            // Ensure dark class is applied to <html> BEFORE rendering
+            if (localStorage.getItem('color-theme') === 'dark' ||
+                (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+                lightIcon.classList.remove('hidden');
+            } else {
+                document.documentElement.classList.remove('dark');
+                darkIcon.classList.remove('hidden');
+            }
+
+            // Toggle theme
+            btn.addEventListener('click', () => {
+                darkIcon.classList.toggle('hidden');
+                lightIcon.classList.toggle('hidden');
+
+                if (localStorage.getItem('color-theme')) {
+                    if (localStorage.getItem('color-theme') === 'light') {
+                        document.documentElement.classList.add('dark');
+                        localStorage.setItem('color-theme', 'dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                        localStorage.setItem('color-theme', 'light');
+                    }
+                } else {
+                    if (document.documentElement.classList.contains('dark')) {
+                        document.documentElement.classList.remove('dark');
+                        localStorage.setItem('color-theme', 'light');
+                    } else {
+                        document.documentElement.classList.add('dark');
+                        localStorage.setItem('color-theme', 'dark');
+                    }
+                }
+            });
+        });
+    </script>
+
+    <script src="~/js/session-guard.js" asp-append-version="true"></script>
+
+    <!-- ===== Global Loading Overlay ===== -->
+    <script>
+        function showMainLoading() {
+            const el = document.getElementById("main-loading");
+            if (!el) return;
+            el.style.display = "flex";
+            // document.body.style.pointerEvents = "none";
+        }
+
+        function hideMainLoading() {
+            const el = document.getElementById("main-loading");
+            if (el) el.style.display = "none";
+
+            // يرجع التفاعل بعد انتهاء التحميل
+            document.body.style.pointerEvents = "";
+        }
+    </script>
+
+    <script src="~/vendor/flatpickr/flatpickr.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/flatpickr/l10n/ar.js" asp-append-version="true"></script>
+
+    <!-- =========================
+         Js Chart
+    ========================== -->
+    <script src="~/js/smartcharts.donut.js" asp-append-version="true"></script>
+    <script src="~/js/smartcharts.line.js" asp-append-version="true"></script>
+    <script src="~/js/smartcharts.kpi.js" asp-append-version="true"></script>
+    <script src="~/js/smartcharts.barh.js" asp-append-version="true"></script>
+    <script src="~/js/smartcharts.funnel.js" asp-append-version="true"></script>
+    <script src="~/js/smartcharts.gauge.js" asp-append-version="true"></script>
+    <script src="~/js/smartcharts.occupancy.js" asp-append-version="true"></script>
+    <script src="~/js/smartcharts.columnpro.js" asp-append-version="true"></script>
+    <script src="~/js/smartcharts.rings.js" asp-append-version="true"></script>
+    <script src="~/js/smartcharts.bullet.js" asp-append-version="true"></script>
+    <script src="~/js/smartcharts.treemap.js" asp-append-version="true"></script>
+    <script src="~/js/smartcharts.statusstack.js" asp-append-version="true"></script>
+    <script src="~/js/smartcharts.waterfall.js" asp-append-version="true"></script>
+    <script src="~/js/smartcharts.statsgrid.js" asp-append-version="true"></script>
+    <script src="~/js/smartcharts.pie3d.js" asp-append-version="true"></script>
+    <script src="~/js/smartcharts.opsboard.js" asp-append-version="true"></script>
+    <script src="~/js/smartcharts.execwatch.js" asp-append-version="true"></script>
+    <script src="~/js/smartcharts.healthkpiroadmap.js" asp-append-version="true"></script>
+
+
+
+    @await Html.PartialAsync("_AiAssistantWidget")
+    <script src="~/js/ai-assistant.js" asp-append-version="true"></script>
+
+</body>
+</html>
+
+<script>
+    (function () {
+      // إذا الصفحة تحتوي QueryString
+      if (window.location.search.length > 0) {
+        // إعادة كتابة الرابط بدون QueryString
+        const cleanUrl = window.location.origin + window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+      }
+    })();
+</script>

@@ -1,0 +1,41 @@
+@model SmartFoundation.UI.ViewModels.SmartCharts.ChartCardConfig
+@using SmartFoundation.UI.ViewModels.SmartCharts
+@using System.Text.Json
+@using System.Text.Encodings.Web
+
+@{
+    var hostId = $"sst_{Model.Id}";
+    var cfgId = $"{hostId}_cfg";
+
+    var items = (Model.StatusStackItems ?? new List<StatusStackItem>())
+        .Select(x => new
+        {
+            key = x.Key ?? "",
+            label = x.Label ?? "",
+            value = (double)x.Value,
+            color = x.Color,
+            href = x.Href
+        }).ToList();
+
+    var cfg = new
+    {
+        id = hostId,
+        dir = (Model.Dir ?? "rtl").ToLower(),
+        tone = Model.Tone.ToString().ToLower(),
+        valueFormat = string.IsNullOrWhiteSpace(Model.StatusStackValueFormat) ? "0" : Model.StatusStackValueFormat,
+        showLegend = Model.StatusStackShowLegend,
+        items = items
+    };
+
+    var json = JsonSerializer.Serialize(cfg, new JsonSerializerOptions
+    {
+        Encoder = JavaScriptEncoder.Default,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    });
+}
+
+<div id="@hostId" class="smart-sst" dir="@Model.Dir" data-config-id="@cfgId"></div>
+
+<script type="application/json" id="@cfgId">
+    @Html.Raw(json)
+</script>

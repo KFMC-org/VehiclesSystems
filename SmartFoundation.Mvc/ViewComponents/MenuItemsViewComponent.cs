@@ -1,0 +1,188 @@
+﻿using Microsoft.AspNetCore.Mvc;
+using SmartFoundation.Application.Services;
+using SmartFoundation.Mvc.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
+using System.Threading.Tasks;
+
+namespace SmartFoundation.Mvc.ViewComponents
+{
+    public class MenuItemsViewComponent : ViewComponent
+    {
+        private readonly MastersServies _mastersServies;
+
+
+        public MenuItemsViewComponent(MastersServies mastersServies)
+        {
+            _mastersServies = mastersServies;
+        }
+
+        public async Task<IViewComponentResult> InvokeAsync()
+        {
+            var usersID = HttpContext.Session.GetString("usersID") ?? "";
+
+            var parameters = new Dictionary<string, object?>
+            {
+                { "UsersID", usersID }
+            };
+
+            var jsonResult = await _mastersServies.GetUserMenuTree(parameters); // use public wrapper
+            var response = JsonSerializer.Deserialize<JsonElement>(jsonResult);
+
+            var menuItems = response.GetProperty("success").GetBoolean()
+                ? response.GetProperty("data").EnumerateArray().Select(MapToMenuItem).ToList()
+                : new List<MenuItem>();
+
+            //var menuTree = BuildMenuHierarchy(menuItems);
+            //return View("~/Views/Shared/_SidebarNavbar.cshtml", menuTree);
+            var menuTree = BuildMenuHierarchy(menuItems);
+            HttpContext.Session.SetString("MENU_TREE", JsonSerializer.Serialize(menuTree));
+            return View("~/Views/Shared/_SidebarNavbar.cshtml", menuTree);
+
+        }
+
+        private static List<MenuItem> BuildMenuHierarchy(IEnumerable<MenuItem> items)
+        {
+            var list = items.OrderBy(x => x.MPSerial ?? int.MaxValue).ToList();
+            var byId = list.ToDictionary(x => x.MPID);
+
+            foreach (var item in list)
+            {
+                var parentId = item.Parents ?? item.ParentMenuID_FK;
+                // Skip invalid/self-parent or missing parent
+                if (parentId is int pid && pid != item.MPID && byId.TryGetValue(pid, out var parent))
+                {
+                    // Avoid duplicate adds
+                    if (!parent.Children.Any(c => c.MPID == item.MPID))
+                        parent.Children.Add(item);
+                }
+            }
+
+            return list
+                .Where(x => (x.Parents ?? x.ParentMenuID_FK) == null || (x.Levels ?? 0) == 1)
+                .OrderBy(x => x.MPSerial ?? int.MaxValue)
+                .ToList();
+        }
+
+        private static MenuItem MapToMenuItem(JsonElement element)
+        {
+            return new MenuItem
+            {
+                MPID = GetInt(element, "MPID"),
+                MenuName_A = GetString(element, "menuName_A") ?? GetString(element, "MenuName_A"),
+                MPSerial = GetInt(element, "MPSerial"),
+                MPLink = NormalizeController(GetString(element, "MPLink")),   // ../Employee -> Employee
+                ParentMenuID_FK = GetNullableInt(element, "parentMenuID_FK"),
+                ProgramID = GetInt(element, "programID"),
+                Parents = GetNullableInt(element, "parents"),
+                Levels = GetInt(element, "Levels"),
+                MPIcon = GetString(element, "MPIcon"),
+
+                MenuNameForView = GetString(element, "MenuNameForView"),
+                LevelNo = GetInt(element, "LevelNo"),
+
+                // ✅ مهم جداً: نقرأ menuLink من الـ SP ونحوّلها لاسم أكشن
+                //  /BuildingClass.aspx  ->  BuildingClass
+                MenuLink = NormalizeAction(GetString(element, "menuLink")),
+
+                PathName_A = GetString(element, "PathName_A"),
+                PathName_E = GetString(element, "PathName_E"),
+
+                ProgramName_A = GetString(element, "programName_A"),
+                ProgramName_E = GetString(element, "programName_E"),
+                ProgramIcon = GetString(element, "programIcon"),
+                ProgramLink = GetString(element, "programLink"),
+                ProgramSerial = GetInt(element, "programSerial"),
+
+                MenuID = GetInt(element, "menuID"),
+                SortKey = GetString(element, "SortKey"),
+                HasPermissionForUser = GetInt(element, "HasPermissionForUser"),
+                IndentedMenuName = GetString(element, "IndentedMenuName")
+            };
+
+            static string NormalizeController(string? controllerRaw)
+            {
+                if (string.IsNullOrWhiteSpace(controllerRaw)) return "";
+                var c = controllerRaw.Replace("\\", "/");
+                var last = c.Split('/', StringSplitOptions.RemoveEmptyEntries).LastOrDefault() ?? c;
+                return last.Trim(); // ../Employee -> Employee
+            }
+
+            static string NormalizeAction(string? actionRaw)
+            {
+                if (string.IsNullOrWhiteSpace(actionRaw))
+                    return "";                // نخليه فاضي إذا ما فيه أكشن
+
+                var a = actionRaw.Trim();
+
+                // لو كانت من نوع /BuildingClass.aspx
+                if (a.StartsWith("/", StringComparison.Ordinal))
+                    a = a[1..];              // نشيل الـ /
+
+                if (a.EndsWith(".aspx", StringComparison.OrdinalIgnoreCase))
+                    a = a[..^5];             // نشيل .aspx
+
+                return a.Trim();             // مثال: "BuildingClass"
+            }
+        }
+
+
+        private static string GetString(JsonElement element, string key, string fallback = "")
+        {
+            if (TryGetProperty(element, key, out var prop))
+            {
+                if (prop.ValueKind == JsonValueKind.String)
+                    return prop.GetString() ?? fallback;
+                if (prop.ValueKind != JsonValueKind.Null)
+                    return prop.ToString();
+            }
+            return fallback;
+        }
+
+        private static int GetInt(JsonElement element, string key, int fallback = 0)
+        {
+            if (TryGetProperty(element, key, out var prop))
+            {
+                if (prop.ValueKind == JsonValueKind.Number)
+                    return prop.GetInt32();
+                if (prop.ValueKind == JsonValueKind.String && int.TryParse(prop.GetString(), out var parsed))
+                    return parsed;
+            }
+            return fallback;
+        }
+
+        private static int? GetNullableInt(JsonElement element, string key)
+        {
+            if (TryGetProperty(element, key, out var prop))
+            {
+                if (prop.ValueKind == JsonValueKind.Number)
+                    return prop.GetInt32();
+                if (prop.ValueKind == JsonValueKind.String && int.TryParse(prop.GetString(), out var parsed))
+                    return parsed;
+            }
+            return null;
+        }
+
+        private static bool TryGetProperty(JsonElement element, string key, out JsonElement property)
+        {
+            // Try exact match first
+            if (element.TryGetProperty(key, out property))
+                return true;
+
+            // Try case-insensitive match
+            foreach (var prop in element.EnumerateObject())
+            {
+                if (string.Equals(prop.Name, key, StringComparison.OrdinalIgnoreCase))
+                {
+                    property = prop.Value;
+                    return true;
+                }
+            }
+
+            property = default;
+            return false;
+        }
+    }
+}

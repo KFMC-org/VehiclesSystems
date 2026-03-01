@@ -1,0 +1,151 @@
+﻿.smart-barh2 {
+    position: relative;
+}
+
+.smart-barh2__wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Header صغير داخل البودي (اختياري) */
+.smart-barh2__meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 2px;
+}
+
+.smart-barh2__hint {
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 700;
+}
+
+/* Row = Label | Bar | Value */
+.smart-barh2__row {
+    display: grid;
+    grid-template-columns: minmax(140px, 220px) 1fr minmax(84px, 110px);
+    gap: 12px;
+    align-items: center;
+}
+
+.smart-barh2[dir="rtl"] .smart-barh2__row {
+    grid-template-columns: minmax(84px,110px) 1fr minmax(140px,220px);
+}
+
+/* Label */
+.smart-barh2__label {
+    font-size: 13px;
+    font-weight: 900;
+    color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Value column */
+.smart-barh2__val {
+    text-align: right;
+    font-size: 13px;
+    font-weight: 950;
+    color: #0f172a;
+    white-space: nowrap;
+}
+
+.smart-barh2[dir="rtl"] .smart-barh2__val {
+    text-align: left;
+}
+
+.smart-barh2__sub {
+    margin-top: 2px;
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 800;
+}
+
+/* Bar track */
+.smart-barh2__track {
+    position: relative;
+    height: 14px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    border: 1px solid rgba(226,232,240,0.95);
+    overflow: hidden;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.85);
+}
+
+/* Bar fill */
+.smart-barh2__fill {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 0%;
+    border-radius: 999px;
+    transform: translateZ(0);
+}
+
+/* RTL: fill from right */
+.smart-barh2[dir="rtl"] .smart-barh2__fill {
+    left: auto;
+    right: 0;
+}
+
+/* Glow end cap (احترافي) */
+.smart-barh2__cap {
+    position: absolute;
+    top: -6px;
+    width: 18px;
+    height: 26px;
+    border-radius: 999px;
+    filter: blur(6px);
+    opacity: .55;
+    pointer-events: none;
+}
+
+/* Tooltip */
+.smart-barh2__tooltip {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 30;
+    pointer-events: none;
+    opacity: 0;
+    transform: translate(-9999px,-9999px);
+    transition: opacity 120ms ease;
+    background: rgba(15,23,42,0.92);
+    color: #fff;
+    padding: 10px 12px;
+    border-radius: 14px;
+    min-width: 210px;
+    box-shadow: 0 14px 38px rgba(2,6,23,0.28);
+}
+
+    .smart-barh2__tooltip.is-show {
+        opacity: 1;
+    }
+
+.smart-barh2__tt-title {
+    font-size: 12px;
+    opacity: .9;
+}
+
+.smart-barh2__tt-val {
+    margin-top: 6px;
+    font-size: 13px;
+    font-weight: 950;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .smart-barh2__row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .smart-barh2__val {
+        text-align: start !important;
+    }
+}
