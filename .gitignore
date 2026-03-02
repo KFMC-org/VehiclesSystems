@@ -1,20 +1,45 @@
-﻿################################################################################
-# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
-################################################################################
-
-/.vs/SmartFoundation/v18/.suo
-/.vs/SmartFoundation/FileContentIndex/79ff4a24-1b25-41ca-8cad-d0a9aa67b89e.vsidx
-/.gitignore
-/.vs/SmartFoundation/FileContentIndex/a07649ad-e823-4893-9d1b-2ef6ceb8d0bd.vsidx
-
-# Visual Studio
-.vs/
+############################
+# Build Folders
+############################
 bin/
 obj/
 
-# User-specific files
+############################
+# Visual Studio
+############################
+.vs/
 *.user
 *.suo
+*.userosscache
+*.sln.docstates
 
-# VS Code
+############################
+# Rider / VS Code
+############################
+.idea/
 .vscode/
+
+############################
+# NuGet
+############################
+*.nupkg
+*.snupkg
+project.assets.json
+project.nuget.cache
+
+############################
+# Logs
+############################
+*.log
+
+############################
+# Publish
+############################
+publish/
+wwwroot/uploads/
+
+############################
+# OS
+############################
+Thumbs.db
+Desktop.ini
