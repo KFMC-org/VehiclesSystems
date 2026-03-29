@@ -1,0 +1,29 @@
+﻿@model SmartFoundation.UI.ViewModels.SmartPage.SmartPageViewModel
+@{
+    ViewData["Title"] = Model.PageTitle;
+    var printMode = (ViewBag.FilterPrint?.ToString() ?? "") == "1";
+}
+
+@if (TempData["DataSetError"] != null)
+{
+    <div class="mb-4 rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">
+        <i class="fa fa-exclamation-circle me-2"></i>
+        @TempData["DataSetError"]
+    </div>
+}
+
+@await Component.InvokeAsync("SmartRenderer", new { model = Model })
+
+<script>
+    (function () {
+        if (location.search && location.search.length > 1 && !@printMode.ToString().ToLower()) {
+            history.replaceState(null, "", location.pathname + location.hash);
+        }
+
+        if (@printMode.ToString().ToLower()) {
+            setTimeout(function () {
+                window.print();
+            }, 700);
+        }
+    })();
+</script>
