@@ -1,0 +1,362 @@
+diff --git a/SmartFoundation.Mvc/wwwroot/css/sf-drawer.css b/SmartFoundation.Mvc/wwwroot/css/sf-drawer.css
+index f545305..e7e9f04 100644
+--- a/SmartFoundation.Mvc/wwwroot/css/sf-drawer.css
++++ b/SmartFoundation.Mvc/wwwroot/css/sf-drawer.css
+@@ -253,3 +253,357 @@ body:has(#sf-user-audit-bills-drawer.is-open) .sf-modal-backdrop,
+ body:has(#sf-user-audit-payments-drawer.is-open) .sf-modal-backdrop {
+     z-index: 10000030 !important;
+ }
++
++/* Vehicle-list chassis link: make the drawer entry point visually discoverable. */
++a[href*="/Vehicle/VehicleDetails?chassisNumber="] {
++    color: #047857 !important;
++    font-weight: 800;
++    text-decoration: none;
++    text-underline-offset: 4px;
++    transition: color 150ms ease, text-decoration-color 150ms ease;
++}
++
++a[href*="/Vehicle/VehicleDetails?chassisNumber="]:hover {
++    color: #065f46 !important;
++    text-decoration: underline;
++    text-decoration-thickness: 2px;
++}
++
++a[href*="/Vehicle/VehicleDetails?chassisNumber="]:focus-visible {
++    border-radius: 4px;
++    outline: 3px solid rgba(16, 185, 129, 0.28);
++    outline-offset: 3px;
++    text-decoration: underline;
++}
++
++/* Vehicle details drawer -------------------------------------------------- */
++#sf-vehicle-details-drawer {
++    --sf-drawer-width: min(1100px, 68vw);
++}
++
++#sf-vehicle-details-drawer .sf-drawer-body {
++    background: #f8fafc;
++}
++
++.vehicle-details {
++    display: grid;
++    gap: 28px;
++    color: #172033;
++}
++
++.vehicle-details__identity {
++    display: grid;
++    grid-template-columns: minmax(300px, 1.35fr) auto auto;
++    align-items: center;
++    gap: 24px;
++    padding: 24px 28px;
++    border: 1px solid #9ddfc9;
++    border-radius: 18px;
++    background: linear-gradient(110deg, #effcf7 0%, #f7fffc 55%, #eefbf6 100%);
++    box-shadow: 0 8px 24px rgba(5, 150, 105, 0.06);
++}
++
++.vehicle-details__identity-main {
++    min-width: 0;
++}
++
++.vehicle-details__identity-label {
++    display: block;
++    margin-bottom: 8px;
++    color: #047857;
++    font-size: 15px;
++    font-weight: 800;
++}
++
++.vehicle-details__chassis-wrap {
++    display: flex;
++    align-items: center;
++    gap: 10px;
++}
++
++.vehicle-details__chassis {
++    min-width: 0;
++    overflow-wrap: anywhere;
++    color: #047857;
++    font-family: Consolas, "Courier New", monospace;
++    font-size: clamp(22px, 2vw, 31px);
++    font-weight: 800;
++    letter-spacing: 0.6px;
++}
++
++.vehicle-details__copy {
++    display: inline-flex;
++    align-items: center;
++    justify-content: center;
++    width: 40px;
++    height: 40px;
++    flex: 0 0 auto;
++    border: 1px solid #a7dcca;
++    border-radius: 10px;
++    background: #ffffff;
++    color: #059669;
++    cursor: pointer;
++    transition: transform 150ms ease, background 150ms ease, color 150ms ease;
++}
++
++.vehicle-details__copy:hover {
++    transform: translateY(-1px);
++    background: #ecfdf5;
++}
++
++.vehicle-details__copy.is-copied {
++    background: #059669;
++    color: #ffffff;
++}
++
++.vehicle-details__plate {
++    display: inline-flex;
++    align-items: center;
++    justify-content: center;
++    gap: 9px;
++    min-width: 145px;
++    min-height: 48px;
++    padding: 8px 18px;
++    border: 1px solid #94a3b8;
++    border-radius: 10px;
++    background: #ffffff;
++    color: #172033;
++    font-size: 20px;
++    font-weight: 800;
++    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.05);
++}
++
++.vehicle-details__plate i {
++    color: #64748b;
++    font-size: 16px;
++}
++
++.vehicle-details__badges {
++    display: flex;
++    flex-wrap: wrap;
++    justify-content: flex-start;
++    gap: 10px;
++}
++
++.vehicle-details__badge {
++    display: inline-flex;
++    align-items: center;
++    gap: 8px;
++    min-height: 42px;
++    padding: 8px 16px;
++    border-radius: 999px;
++    font-size: 14px;
++    font-weight: 800;
++    white-space: nowrap;
++}
++
++.vehicle-details__badge--success {
++    background: #d1fae5;
++    color: #047857;
++}
++
++.vehicle-details__badge--danger {
++    background: #fee2e2;
++    color: #b91c1c;
++}
++
++.vehicle-details__badge--neutral {
++    background: #e8edf3;
++    color: #334155;
++}
++
++.vehicle-details__metrics {
++    display: grid;
++    grid-template-columns: repeat(3, minmax(0, 1fr));
++    gap: 18px;
++}
++
++.vehicle-details__metric {
++    --metric-color: #475569;
++    --metric-border: #d4dbe4;
++    --metric-bg: #f8fafc;
++    display: flex;
++    align-items: center;
++    gap: 18px;
++    min-height: 126px;
++    padding: 22px 24px;
++    border: 1px solid var(--metric-border);
++    border-radius: 16px;
++    background: linear-gradient(120deg, #ffffff 0%, var(--metric-bg) 100%);
++    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.055);
++}
++
++.vehicle-details__metric--success {
++    --metric-color: #047857;
++    --metric-border: #a7e5cf;
++    --metric-bg: #eafbf4;
++}
++
++.vehicle-details__metric--info {
++    --metric-color: #0574ae;
++    --metric-border: #a7d9f5;
++    --metric-bg: #edf8ff;
++}
++
++.vehicle-details__metric--warning {
++    --metric-color: #b45309;
++    --metric-border: #f7cc8a;
++    --metric-bg: #fff7e9;
++}
++
++.vehicle-details__metric--danger {
++    --metric-color: #b91c1c;
++    --metric-border: #f5b4b4;
++    --metric-bg: #fff0f0;
++}
++
++.vehicle-details__metric-icon {
++    display: inline-flex;
++    align-items: center;
++    justify-content: center;
++    width: 52px;
++    height: 52px;
++    flex: 0 0 auto;
++    border-radius: 50%;
++    background: color-mix(in srgb, var(--metric-color) 13%, white);
++    color: var(--metric-color);
++    font-size: 21px;
++}
++
++.vehicle-details__metric h3 {
++    margin: 0 0 8px;
++    color: #172033;
++    font-size: 17px;
++    font-weight: 800;
++}
++
++.vehicle-details__metric strong {
++    display: block;
++    color: var(--metric-color);
++    font-size: clamp(23px, 2vw, 31px);
++    font-weight: 900;
++    line-height: 1.25;
++}
++
++.vehicle-details__basic {
++    padding-bottom: 6px;
++}
++
++.vehicle-details__section-title {
++    display: flex;
++    align-items: center;
++    gap: 18px;
++    margin-bottom: 16px;
++}
++
++.vehicle-details__section-title h3 {
++    margin: 0;
++    color: #065f46;
++    font-size: 22px;
++    font-weight: 900;
++    white-space: nowrap;
++}
++
++.vehicle-details__section-title span {
++    height: 1px;
++    flex: 1;
++    background: linear-gradient(to left, #6ee7b7, transparent);
++}
++
++.vehicle-details__fields {
++    display: grid;
++    grid-template-columns: repeat(3, minmax(0, 1fr));
++    margin: 0;
++    overflow: hidden;
++    border: 1px solid #d6dee8;
++    border-radius: 15px;
++    background: #ffffff;
++    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.045);
++}
++
++.vehicle-details__field {
++    min-width: 0;
++    padding: 17px 20px;
++    border-inline-start: 1px solid #e2e8f0;
++    border-top: 1px solid #e2e8f0;
++    text-align: center;
++}
++
++.vehicle-details__field:nth-child(-n + 3) {
++    border-top: 0;
++}
++
++.vehicle-details__field:nth-child(3n + 1) {
++    border-inline-start: 0;
++}
++
++.vehicle-details__field dt {
++    margin-bottom: 6px;
++    color: #64748b;
++    font-size: 13px;
++    font-weight: 700;
++}
++
++.vehicle-details__field dd {
++    margin: 0;
++    overflow-wrap: anywhere;
++    color: #172033;
++    font-size: 17px;
++    font-weight: 800;
++}
++
++@media (max-width: 1200px) {
++    #sf-vehicle-details-drawer {
++        --sf-drawer-width: 86vw;
++    }
++
++    .vehicle-details__identity {
++        grid-template-columns: minmax(260px, 1fr) auto;
++    }
++
++    .vehicle-details__badges {
++        grid-column: 1 / -1;
++    }
++}
++
++@media (max-width: 820px) {
++    #sf-vehicle-details-drawer {
++        --sf-drawer-width: 100vw;
++    }
++
++    .vehicle-details {
++        gap: 20px;
++    }
++
++    .vehicle-details__identity {
++        grid-template-columns: 1fr;
++        gap: 16px;
++        padding: 20px;
++    }
++
++    .vehicle-details__badges {
++        grid-column: auto;
++    }
++
++    .vehicle-details__plate {
++        justify-self: stretch;
++    }
++
++    .vehicle-details__metrics {
++        grid-template-columns: 1fr;
++    }
++
++    .vehicle-details__fields {
++        grid-template-columns: 1fr;
++    }
++
++    .vehicle-details__field,
++    .vehicle-details__field:nth-child(-n + 3) {
++        border-top: 1px solid #e2e8f0;
++        border-inline-start: 0;
++    }
++
++    .vehicle-details__field:first-child {
++        border-top: 0;
++    }
++}

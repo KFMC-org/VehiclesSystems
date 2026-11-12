@@ -1,0 +1,47 @@
+@model SmartFoundation.UI.ViewModels.SmartPage.SmartPageViewModel
+@{
+    ViewData["Title"] = Model.PageTitle;
+    var filterGeneralNo = ViewBag.FilterGeneralNo as string ?? "";
+    var filterChassis = ViewBag.FilterChassisNumber as string ?? "";
+    var filterFrom = ViewBag.FilterFromDate as string ?? "";
+    var filterTo = ViewBag.FilterToDate as string ?? "";
+}
+
+<div class="bg-white border border-gray-200 rounded-lg shadow-sm mb-4 p-4">
+    <form method="get" action="/Vehicle/Custody" class="flex flex-wrap items-end gap-3" dir="rtl">
+        <div class="flex flex-col gap-1">
+            <label class="text-xs text-gray-600 font-medium">رقم الهيكل</label>
+            <input type="text" name="chassisNumber" value="@filterChassis"
+                   class="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 w-40"
+                   placeholder="ابحث برقم الهيكل" />
+        </div>
+        <div class="flex flex-col gap-1">
+            <label class="text-xs text-gray-600 font-medium">الرقم العام</label>
+            <input type="text" name="generalNo" value="@filterGeneralNo"
+                   class="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 w-40"
+                   placeholder="ابحث بالرقم العام" />
+        </div>
+        <div class="flex flex-col gap-1">
+            <label class="text-xs text-gray-600 font-medium">من تاريخ</label>
+            <input type="date" name="fromDate" value="@filterFrom"
+                   class="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 w-40" />
+        </div>
+        <div class="flex flex-col gap-1">
+            <label class="text-xs text-gray-600 font-medium">إلى تاريخ</label>
+            <input type="date" name="toDate" value="@filterTo"
+                   class="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 w-40" />
+        </div>
+        <div class="flex gap-2">
+            <button type="submit"
+                    class="bg-blue-600 text-white px-4 py-1.5 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors">
+                <i class="fa-solid fa-search ml-1"></i> بحث
+            </button>
+            <a href="/Vehicle/Custody"
+               class="bg-gray-200 text-gray-700 px-4 py-1.5 rounded-md text-sm font-medium hover:bg-gray-300 transition-colors">
+                <i class="fa-solid fa-rotate-right ml-1"></i> إعادة تعيين
+            </a>
+        </div>
+    </form>
+</div>
+
+@await Component.InvokeAsync("SmartRenderer", new { model = Model })
