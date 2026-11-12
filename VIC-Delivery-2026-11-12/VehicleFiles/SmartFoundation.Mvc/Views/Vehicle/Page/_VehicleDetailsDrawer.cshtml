@@ -1,0 +1,67 @@
+@model SmartFoundation.Mvc.Models.VehicleDetailsDrawerViewModel
+
+<div class="vehicle-details" dir="rtl">
+    <section class="vehicle-details__identity" aria-label="بيانات تعريف المركبة">
+        <div class="vehicle-details__identity-main">
+            <span class="vehicle-details__identity-label">رقم الهيكل</span>
+            <div class="vehicle-details__chassis-wrap">
+                <strong class="vehicle-details__chassis" dir="ltr">@Model.ChassisNumber</strong>
+                <button type="button"
+                        class="vehicle-details__copy"
+                        data-copy-chassis="@Model.ChassisNumber"
+                        title="نسخ رقم الهيكل"
+                        aria-label="نسخ رقم الهيكل">
+                    <i class="fa-regular fa-copy" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="vehicle-details__plate" dir="rtl">
+            <i class="fa-solid fa-id-card" aria-hidden="true"></i>
+            <span>@Model.PlateDisplay</span>
+        </div>
+
+        <div class="vehicle-details__badges">
+            <span class="vehicle-details__badge vehicle-details__badge--@Model.RecordStatusTone">
+                <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                @Model.RecordStatus
+            </span>
+            <span class="vehicle-details__badge vehicle-details__badge--@Model.CustodyTone">
+                <i class="fa-solid fa-user" aria-hidden="true"></i>
+                @Model.CustodyStatus
+            </span>
+        </div>
+    </section>
+
+    <section class="vehicle-details__metrics" aria-label="مؤشرات المركبة">
+        @foreach (var metric in Model.Metrics)
+        {
+            <article class="vehicle-details__metric vehicle-details__metric--@metric.Tone">
+                <span class="vehicle-details__metric-icon">
+                    <i class="@metric.Icon" aria-hidden="true"></i>
+                </span>
+                <div>
+                    <h3>@metric.Title</h3>
+                    <strong dir="auto">@metric.Value</strong>
+                </div>
+            </article>
+        }
+    </section>
+
+    <section class="vehicle-details__basic" aria-labelledby="vehicle-basic-title">
+        <div class="vehicle-details__section-title">
+            <h3 id="vehicle-basic-title">البيانات الأساسية</h3>
+            <span aria-hidden="true"></span>
+        </div>
+
+        <dl class="vehicle-details__fields">
+            @foreach (var field in Model.BasicFields)
+            {
+                <div class="vehicle-details__field">
+                    <dt>@field.Label</dt>
+                    <dd dir="@(field.LeftToRight ? "ltr" : "auto")">@field.Value</dd>
+                </div>
+            }
+        </dl>
+    </section>
+</div>

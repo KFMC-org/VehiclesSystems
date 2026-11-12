@@ -1,0 +1,292 @@
+warning: in the working copy of 'Documents/Codex/2026-11-11/files-pasted-by-the-user-senior/work/vic-patch-work/reports/b/SmartFoundation.Mvc/Reports/Components/StandardHeaderComponent.cs', LF will be replaced by CRLF the next time Git touches it
+diff --git a/SmartFoundation.Mvc/Reports/Components/LetterBlocksComponent.cs b/SmartFoundation.Mvc/Reports/Components/LetterBlocksComponent.cs
+index 97da9e4..7727c2e 100644
+--- a/SmartFoundation.Mvc/Reports/Components/LetterBlocksComponent.cs
++++ b/SmartFoundation.Mvc/Reports/Components/LetterBlocksComponent.cs
+@@ -9,11 +9,18 @@ namespace SmartFoundation.MVC.Reports
+         {
+             var blocks = report.LetterBlocks ?? new();
+ 
+-            container.PaddingHorizontal(10).Column(col =>
++            var hasStretchTable = blocks.Any(b => b.Type == LetterBlockType.Table && b.Table?.ExtendVertical == true);
++
++            var outer = container;
++            if (hasStretchTable)
++                outer = outer.ExtendVertical();
++
++            outer.Column(col =>
+             {
+                 if (!string.IsNullOrWhiteSpace(report.LetterTitle))
+                 {
+                     col.Item()
++                        .PaddingHorizontal(10)
+                         .PaddingBottom(10)
+                         .AlignCenter()
+                         .Text(report.LetterTitle)
+@@ -26,12 +33,29 @@ namespace SmartFoundation.MVC.Reports
+                     switch (b.Type)
+                     {
+                         case LetterBlockType.Text:
+-                            col.Item().Element(x => RenderTextBlock(x, b));
++                            col.Item().PaddingHorizontal(10).Element(x => RenderTextBlock(x, b));
+                             break;
+ 
+                         case LetterBlockType.Table:
+                             if (b.Table != null)
+-                                col.Item().Element(x => RenderTableBlock(x, b));
++                            {
++                                var tableItem = col.Item().PaddingHorizontal(10);
++                                if (b.Table.ExtendVertical)
++                                    tableItem = tableItem.ExtendVertical();
++                                tableItem.Element(x => RenderTableBlock(x, b));
++                            }
++                            break;
++
++                        case LetterBlockType.Footer:
++                            col.Item()
++                                .PaddingTop(b.PaddingTop)
++                                .PaddingBottom(b.PaddingBottom)
++                                .Row(row =>
++                                {
++                                    row.RelativeItem().AlignRight().Text(b.FooterRight).FontSize(b.FooterFontSize).DirectionFromRightToLeft();
++                                    row.RelativeItem().AlignCenter().Text(b.FooterCenter).FontSize(b.FooterFontSize).DirectionFromRightToLeft();
++                                    row.RelativeItem().AlignLeft().Text(b.FooterLeft).FontSize(b.FooterFontSize);
++                                });
+                             break;
+ 
+                         case LetterBlockType.Spacer:
+@@ -40,6 +64,7 @@ namespace SmartFoundation.MVC.Reports
+ 
+                         case LetterBlockType.Divider:
+                             col.Item()
++                                .PaddingHorizontal(10)
+                                 .PaddingTop(b.PaddingTop)
+                                 .PaddingBottom(b.PaddingBottom)
+                                 .LineHorizontal(1f)
+@@ -94,12 +119,16 @@ namespace SmartFoundation.MVC.Reports
+         {
+             var tableData = block.Table!;
+ 
+-            container
++            var tc = container
+                 .PaddingTop(block.PaddingTop)
+                 .PaddingBottom(block.PaddingBottom)
+                 .PaddingRight(block.PaddingRight)
+-                .PaddingLeft(block.PaddingLeft)
+-                .Table(table =>
++                .PaddingLeft(block.PaddingLeft);
++
++            if (tableData.ExtendVertical)
++                tc = tc.ExtendVertical();
++
++            tc.Table(table =>
+                 {
+                     table.ColumnsDefinition(columns =>
+                     {
+@@ -134,9 +163,12 @@ namespace SmartFoundation.MVC.Reports
+ 
+                     foreach (var row in tableData.Rows)
+                     {
++                        var isStretchRow = row.ExtendVertical;
++                        var rowMinHeight = row.MinRowHeight > 0 ? row.MinRowHeight : tableData.MinRowHeight;
++
+                         foreach (var cell in row.Cells)
+                         {
+-                            table.Cell()
++                            var tableCell = table.Cell()
+                                 .ColumnSpan((uint)cell.ColumnSpan)
+                                 .RowSpan((uint)cell.RowSpan)
+                                 .Border(tableData.BorderWidth)
+@@ -144,8 +176,47 @@ namespace SmartFoundation.MVC.Reports
+                                 .Background(cell.BackgroundColor)
+                                 .Padding(tableData.CellPadding)
+                                 .AlignMiddle()
+-                                .Element(c => AlignCell(c, cell.Align))
+-                                .Text(t =>
++                                .Element(c => AlignCell(c, cell.Align));
++
++                            if (isStretchRow && rowMinHeight > 0)
++                            {
++                                tableCell.MinHeight(rowMinHeight).Text(t =>
++                                {
++                                    var span = t.Span(cell.Text ?? "")
++                                        .FontSize(cell.FontSize)
++                                        .DirectionFromRightToLeft();
++
++                                    if (cell.Bold)
++                                        span.SemiBold();
++                                });
++                            }
++                            else if (isStretchRow)
++                            {
++                                tableCell.ExtendVertical().Text(t =>
++                                {
++                                    var span = t.Span(cell.Text ?? "")
++                                        .FontSize(cell.FontSize)
++                                        .DirectionFromRightToLeft();
++
++                                    if (cell.Bold)
++                                        span.SemiBold();
++                                });
++                            }
++                            else if (rowMinHeight > 0)
++                            {
++                                tableCell.MinHeight(rowMinHeight).Text(t =>
++                                {
++                                    var span = t.Span(cell.Text ?? "")
++                                        .FontSize(cell.FontSize)
++                                        .DirectionFromRightToLeft();
++
++                                    if (cell.Bold)
++                                        span.SemiBold();
++                                });
++                            }
++                            else
++                            {
++                                tableCell.Text(t =>
+                                 {
+                                     var span = t.Span(cell.Text ?? "")
+                                         .FontSize(cell.FontSize)
+@@ -154,6 +225,7 @@ namespace SmartFoundation.MVC.Reports
+                                     if (cell.Bold)
+                                         span.SemiBold();
+                                 });
++                            }
+                         }
+                     }
+                 });
+diff --git a/SmartFoundation.Mvc/Reports/Components/StandardHeaderComponent.cs b/SmartFoundation.Mvc/Reports/Components/StandardHeaderComponent.cs
+index d674aee..2760369 100644
+--- a/SmartFoundation.Mvc/Reports/Components/StandardHeaderComponent.cs
++++ b/SmartFoundation.Mvc/Reports/Components/StandardHeaderComponent.cs
+@@ -5,21 +5,27 @@ namespace SmartFoundation.MVC.Reports;
+ 
+ public static class StandardHeaderComponent
+ {
+-    public static void Compose(IContainer container, ReportResult report)
+-    {
+-        container.PaddingBottom(8).Column(col =>
++        public static void Compose(IContainer container, ReportResult report)
+         {
+-            col.Item().Row(row =>
++            if (string.IsNullOrWhiteSpace(report.Title) && (report.HeaderFields == null || report.HeaderFields.Count == 0))
++                return;
++
++            container.PaddingBottom(8).Column(col =>
+             {
+-                row.RelativeItem().Text(report.Title).FontSize(16).SemiBold();
+-                row.ConstantItem(220).AlignRight().Column(r =>
++                col.Item().Row(row =>
+                 {
+-                    foreach (var kv in report.HeaderFields)
+-                        r.Item().AlignRight().Text($"{kv.Key}: {kv.Value}").FontSize(10);
++                    row.RelativeItem().Text(report.Title).FontSize(16).SemiBold();
++                    row.ConstantItem(220).AlignRight().Column(r =>
++                    {
++                        if (report.HeaderFields != null)
++                        {
++                            foreach (var kv in report.HeaderFields)
++                                r.Item().AlignRight().Text($"{kv.Key}: {kv.Value}").FontSize(10);
++                        }
++                    });
+                 });
+-            });
+ 
+-            col.Item().LineHorizontal(1);
+-        });
+-    }
++                col.Item().LineHorizontal(1);
++            });
++        }
+ }
+diff --git a/SmartFoundation.Mvc/Reports/Models/ReportModels.cs b/SmartFoundation.Mvc/Reports/Models/ReportModels.cs
+index 71a0518..1a1aba4 100644
+--- a/SmartFoundation.Mvc/Reports/Models/ReportModels.cs
++++ b/SmartFoundation.Mvc/Reports/Models/ReportModels.cs
+@@ -83,7 +83,8 @@ public enum LetterBlockType
+     Text,
+     Table,
+     Spacer,
+-    Divider
++    Divider,
++    Footer
+ }
+ 
+ public class LetterTableCell
+@@ -100,6 +101,8 @@ public class LetterTableCell
+ public class LetterTableRow
+ {
+     public List<LetterTableCell> Cells { get; set; } = new();
++    public bool ExtendVertical { get; set; } = false;
++    public float MinRowHeight { get; set; } = 0f;
+ }
+ 
+ public class LetterTable
+@@ -111,6 +114,8 @@ public class LetterTable
+     public float BorderWidth { get; set; } = 1f;
+     public string BorderColor { get; set; } = "#444444";
+     public float CellPadding { get; set; } = 6f;
++    public bool ExtendVertical { get; set; } = false;
++    public float MinRowHeight { get; set; } = 0f;
+ }
+ 
+ public class LetterBlock
+@@ -138,6 +143,13 @@ public class LetterBlock
+ 
+     // ===== Table =====
+     public LetterTable? Table { get; set; }
++    public bool StretchToFill { get; set; } = false;
++
++    // ===== Footer =====
++    public string FooterRight { get; set; } = "";
++    public string FooterCenter { get; set; } = "";
++    public string FooterLeft { get; set; } = "";
++    public float FooterFontSize { get; set; } = 6.3f;
+ }
+ 
+ public static class LetterBlockFactory
+@@ -175,7 +187,8 @@ public static class LetterBlockFactory
+         float paddingTop = 0,
+         float paddingBottom = 0,
+         float paddingRight = 0,
+-        float paddingLeft = 0)
++        float paddingLeft = 0,
++        bool stretchToFill = false)
+     {
+         return new LetterBlock
+         {
+@@ -184,7 +197,8 @@ public static class LetterBlockFactory
+             PaddingTop = paddingTop,
+             PaddingBottom = paddingBottom,
+             PaddingRight = paddingRight,
+-            PaddingLeft = paddingLeft
++            PaddingLeft = paddingLeft,
++            StretchToFill = stretchToFill
+         };
+     }
+ 
+@@ -208,6 +222,24 @@ public static class LetterBlockFactory
+             PaddingBottom = paddingBottom
+         };
+     }
++
++    public static LetterBlock FooterBlock(
++        string right,
++        string center,
++        string left,
++        float fontSize = 6.3f,
++        float paddingTop = 4)
++    {
++        return new LetterBlock
++        {
++            Type = LetterBlockType.Footer,
++            FooterRight = right,
++            FooterCenter = center,
++            FooterLeft = left,
++            FooterFontSize = fontSize,
++            PaddingTop = paddingTop
++        };
++    }
+ }
+ 
+ public static class ReportTableFactory

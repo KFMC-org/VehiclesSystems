@@ -1,0 +1,9 @@
+@model SmartFoundation.UI.ViewModels.SmartPage.SmartPageViewModel
+@{
+    ViewData["Title"] = Model.PageTitle;
+}
+@await Component.InvokeAsync("SmartRenderer", new { model = Model })
+
+@section Scripts {
+    <script src="~/js/vehicle-list-drawer.js" asp-append-version="true"></script>
+}
